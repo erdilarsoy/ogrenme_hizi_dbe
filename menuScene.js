@@ -10,9 +10,12 @@ export default class MenuScene extends Phaser.Scene {
         this.loadErrors.push({ key: file.key, src: file.src || file.url || 'unknown' });
       });
 
-      this.load.image('symbolCards', 'assets/symbolCardSet.png');
-      this.load.image('digitCards', 'assets/digitCardSet.png');
-      this.load.image('scoreboard', 'assets/scoreboardUI.png');
+      // Get base URL for GitHub Pages (e.g., '/ogrenme_hizi_dbe/')
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      
+      this.load.image('symbolCards', `${baseUrl}assets/symbolCardSet.png`);
+      this.load.image('digitCards', `${baseUrl}assets/digitCardSet.png`);
+      this.load.image('scoreboard', `${baseUrl}assets/scoreboardUI.png`);
     }
   
     create() {
