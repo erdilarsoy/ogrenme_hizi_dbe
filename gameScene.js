@@ -9,10 +9,12 @@ export default class GameScene extends Phaser.Scene {
       score: 0,
       correct: 0,
       total: 0,
-      timeRemaining: 90,
+      timeRemaining: 60, // 1 dakika = 60 saniye
       level: 1,
       streak: 0
     };
+    this.startTime = null; // Track when game started for smooth progress bar
+    this.gameEnded = false;
   }
 
   init(data) {
@@ -20,11 +22,22 @@ export default class GameScene extends Phaser.Scene {
       name: data && data.playerName ? data.playerName : '',
       company: data && data.companyName ? data.companyName : ''
     };
+    // Get tutorial completion time to start progress bar at the right moment
+    this.tutorialEndTime = data && data.tutorialEndTime ? data.tutorialEndTime : null;
+    // Flag to start progress bar (from InfoScene)
+    this.startProgressBarOnStart = data && data.startProgressBar ? true : false;
   }
 
   create() {
-    // Plain white background
-    this.cameras.main.setBackgroundColor('#ffffff');
+    // Background and Static UI
+    this.add.image(512, 384, 'background').setDepth(-10); // ARKAPLAN.png
+    this.add.image(512, 50, 'header').setDepth(1); // HEADER.png
+    this.add.image(512, 720, 'footer').setDepth(1); // FOOTER.png
+
+    // Layout container for the game area
+    // SymbolManager handles the main 'layout' image in createGameGrid, so we leave it there or move it here.
+    // If we move it here, we ensure layer order.
+    // Let's leave layout in SymbolManager but ensure depth is correct.
 
     // Ensure inputs are enabled
     this.input.enabled = true;
@@ -62,7 +75,7 @@ export default class GameScene extends Phaser.Scene {
       this.input.keyboard.on('keydown', (event) => {
         if (this.gameData.timeRemaining <= 0) return; // Don't process if game ended
         const key = event.key;
-        if (key >= '0' && key <= '9') {
+        if (key >= '1' && key <= '7') {
           const digit = parseInt(key);
           event.preventDefault(); // Prevent default browser behavior
           this.inputHandler.handleDigitInput(digit);
@@ -70,8 +83,16 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Start game timer
-    this.startGameTimer();
+    // Progress bar starts when start button is clicked
+    this.gameStarted = true;
+    
+    // Start timer if startProgressBar flag is set (from InfoScene)
+    // Timer will start when scene is fully created
+    this.time.delayedCall(100, () => {
+      if (this.startProgressBarOnStart) {
+        this.startGameTimer();
+      }
+    });
 
     // Create ambient glow effects
     this.createAmbientEffects();
@@ -82,24 +103,53 @@ export default class GameScene extends Phaser.Scene {
   }
 
   startGameTimer() {
+    const maxTime = 60; // 1 dakika = 60 saniye
+    
+    // Record start time right before starting timers to ensure accurate timing
+    this.startTime = this.time.now;
+    
+    // Update time remaining every second
     this.gameTimer = this.time.addEvent({
       delay: 1000,
       callback: () => {
         this.gameData.timeRemaining--;
-        this.uiManager.updateTimer();
-        
         if (this.gameData.timeRemaining <= 0) {
+          this.gameData.timeRemaining = 0;
           this.endGame();
         }
       },
-      repeat: this.gameData.timeRemaining - 1
+      repeat: maxTime - 1
+    });
+
+    // Update progress bar more frequently for smoother animation (every 50ms)
+    this.progressBarTimer = this.time.addEvent({
+      delay: 50,
+      callback: () => {
+        // Calculate smooth time remaining based on elapsed time
+        const elapsed = (this.time.now - this.startTime) / 1000; // elapsed in seconds
+        const smoothTimeRemaining = Math.max(0, maxTime - elapsed);
+        
+        // Update gameData for display, but keep integer for game logic
+        this.gameData.timeRemainingForDisplay = smoothTimeRemaining;
+        
+        this.uiManager.updateTimer();
+        
+        // End game if time is up
+        if (smoothTimeRemaining <= 0 && !this.gameEnded) {
+          this.gameData.timeRemaining = 0;
+          this.endGame();
+        }
+      },
+      repeat: -1 // Repeat indefinitely until game ends
     });
   }
 
   processAnswer(digit) {
+    if (this.gameData.timeRemaining <= 0) return; // Don't process if time is up
+    
     const result = this.symbolManager.checkAnswer(digit);
     this.gameData.total++;
-    
+
     if (result.correct) {
       this.gameData.correct++;
       this.gameData.score += (10 + this.gameData.streak);
@@ -109,7 +159,7 @@ export default class GameScene extends Phaser.Scene {
       this.gameData.streak = 0;
       this.showFeedback(result.symbol, false);
     }
-    
+
     this.uiManager.updateStats();
     this.symbolManager.nextSymbol();
   }
@@ -119,24 +169,25 @@ export default class GameScene extends Phaser.Scene {
   }
 
   endGame() {
-    this.gameTimer.destroy();
-    
+    if (this.gameTimer) this.gameTimer.destroy();
+    if (this.progressBarTimer) this.progressBarTimer.destroy();
+
     // Calculate final metrics
     const accuracy = this.gameData.total > 0 ? (this.gameData.correct / this.gameData.total * 100).toFixed(1) : 0;
-    const wpm = (this.gameData.correct / 1.5).toFixed(1); // 90 saniye = 1.5 dakika
-    const durationSeconds = 90; // oyun süresi sabit
-    
+    const wpm = (this.gameData.correct / 1.0).toFixed(1); // 60 saniye = 1 dakika
+    const durationSeconds = 60; // oyun süresi sabit
+
     // Hide all UI elements before showing thank-you message
     if (this.symbolManager) {
       this.symbolManager.gameSymbols.forEach(s => s.setVisible(false));
       this.symbolManager.referenceSprites.forEach(s => s.setVisible(false));
     }
     if (this.uiManager) {
-      if (this.uiManager.timerText) this.uiManager.timerText.setVisible(false);
+      if (this.uiManager.progressBar) this.uiManager.progressBar.clear();
+      if (this.uiManager.progressBarBg) this.uiManager.progressBarBg.clear();
       if (this.uiManager.scoreText) this.uiManager.scoreText.setVisible(false);
       if (this.uiManager.accuracyText) this.uiManager.accuracyText.setVisible(false);
       if (this.uiManager.streakText) this.uiManager.streakText.setVisible(false);
-      if (this.uiManager.progressBar) this.uiManager.progressBar.clear();
     }
     if (this.inputHandler) {
       this.inputHandler.digitButtons.forEach(b => {
@@ -144,7 +195,7 @@ export default class GameScene extends Phaser.Scene {
         if (b.text) b.text.setVisible(false);
       });
     }
-    
+
     // Save to localStorage
     try {
       const record = {
@@ -164,7 +215,7 @@ export default class GameScene extends Phaser.Scene {
       localStorage.setItem(key, JSON.stringify(prev));
 
       // Auto-download CSV after saving
-      const csvData = [['Ad Soyad','Şirket','Skor','Doğru','Toplam','Doğruluk','Süre (sn)','Tarih']];
+      const csvData = [['Ad Soyad', 'Şirket', 'Skor', 'Doğru', 'Toplam', 'Doğruluk', 'Süre (sn)', 'Tarih']];
       const results = JSON.parse(localStorage.getItem('sdmt_results') || '[]');
       results.forEach(r => {
         csvData.push([
@@ -181,7 +232,7 @@ export default class GameScene extends Phaser.Scene {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (_) {}
+    } catch (_) { }
 
     // Show only thank-you message on white overlay and stop input
     const overlay = this.add.graphics();

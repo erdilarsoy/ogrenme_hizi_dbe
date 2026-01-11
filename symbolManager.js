@@ -1,120 +1,103 @@
 import { SYMBOLS, DIGIT_MAPPING } from './constants.js';
 
 export default class SymbolManager {
-    constructor(scene) {
-      this.scene = scene;
-      this.symbols = SYMBOLS;
-      this.digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-      this.symbolToDigit = DIGIT_MAPPING;
-      this.currentSymbolIndex = 0;
-      this.referenceSprites = [];
-      this.gameSymbols = [];
-      
-      // mapping fixed; no shuffle
-    }
-  
-    generateMapping() {}
-  
-    createReferenceKey() {
-      // Background for reference key
-      const keyBg = this.scene.add.graphics();
-      keyBg.fillStyle(0xffffff, 1);
-      keyBg.fillRoundedRect(80, 30, 864, 120, 10);
-      // no outline
-      keyBg.setDepth(0);
-  
-      this.scene.add.text(512, 50, 'Referans Anahtarı', {
-        fontSize: '18px',
-        fontWeight: 'bold',
-        fill: '#990014'
-      }).setOrigin(0.5).setDepth(2);
-  
-      // Display symbol-digit pairs
-      const spacing = 98;
-      const visibleCount = 8;
-      const totalWidth = (visibleCount - 1) * spacing;
-      const startX = 512 - totalWidth / 2;
-      const symbolY = 85;
-      const digitY = 115;
-      
-      for (let i = 0; i < visibleCount; i++) { // Show first 8 pairs
-        const symbol = this.symbols[i];
-        const digit = this.symbolToDigit[symbol];
-        const x = startX + i * spacing;
-  
-        // Symbol
-        const symbolText = this.scene.add.text(x, symbolY, symbol, {
-          fontSize: '32px',
-          fontWeight: 'bold',
-          fill: '#990014'
-        }).setOrigin(0.5).setDepth(2);
-  
-        // Digit below symbol
-        this.scene.add.text(x, digitY, digit.toString(), {
-          fontSize: '28px',
-          fontWeight: 'bold',
-          fill: '#333333'
-        }).setOrigin(0.5).setDepth(2);
-  
-        this.referenceSprites.push(symbolText);
-      }
-    }
-  
-    createGameGrid() {
-      // Game area background
-      const gameBg = this.scene.add.graphics();
-      gameBg.fillStyle(0xffffff, 1);
-      gameBg.fillRoundedRect(80, 180, 864, 400, 15);
-      // no outline
-      gameBg.setDepth(0);
-  
-      this.scene.add.text(512, 210, 'Aşağıdaki sembolü doğru sayıyla eşleştir:', {
-        fontSize: '20px',
-        fill: '#222222'
-      }).setOrigin(0.5).setDepth(2);
-  
-      // Create grid of symbols to match
-      this.createCurrentSymbol();
-    }
-  
-    createCurrentSymbol() {
-      // Clear previous symbols
-      this.gameSymbols.forEach(sprite => sprite.destroy());
-      this.gameSymbols = [];
-  
-      // Get random symbol from first 8 (matching reference key)
-      const symbolIndex = Phaser.Math.Between(0, 7);
-      const symbol = this.symbols[symbolIndex];
-  
-      // Create large symbol in center
-      const symbolText = this.scene.add.text(512, 350, symbol, {
-        fontSize: '80px',
-        fontWeight: 'bold',
-        fill: '#990014'
-      }).setOrigin(0.5).setDepth(2);
-  
-      this.gameSymbols.push(symbolText);
-      this.currentSymbol = symbol;
-    }
-  
-    checkAnswer(inputDigit) {
-      const correctDigit = this.symbolToDigit[this.currentSymbol];
-      const symbol = this.gameSymbols[0];
-      
-      return {
-        correct: inputDigit === correctDigit,
-        symbol: symbol,
-        expectedDigit: correctDigit,
-        inputDigit: inputDigit
-      };
-    }
-  
-    nextSymbol() {
-      // Small delay before showing next symbol
-      this.scene.time.delayedCall(500, () => {
-        this.createCurrentSymbol();
-      });
-    }
+  constructor(scene) {
+    this.scene = scene;
+    this.symbols = SYMBOLS;
+    this.digits = [1, 2, 3, 4, 5, 6, 7];
+    this.symbolToDigit = DIGIT_MAPPING;
+    this.currentSymbolIndex = 0;
+    this.referenceSprites = [];
+    this.gameSymbols = [];
+    this.lastSymbol = null; // Track last symbol to avoid consecutive same symbols
   }
-  
-  
+
+  createReferenceKey() {
+    // Position Reference Key directly below header
+    const keyY = 150;
+    // Use the image asset as requested
+    const keyBg = this.scene.add.image(512, keyY, 'refKey');
+    keyBg.setScale(0.9); // Adjust scale if needed based on previous implementation
+    keyBg.setDepth(1);
+
+    // Position symbols inside the key
+    // User requested to use ONLY the static image, so we remove dynamic overlays.
+    /* 
+    const visibleCount = 7;
+    const spacing = 100;
+    const startX = 512 - ((visibleCount - 1) * spacing) / 2;
+    const symbolY = keyY - 20; 
+    const digitY = keyY + 30; 
+
+    for (let i = 0; i < visibleCount; i++) {
+        // ... (Overlays removed)
+    }
+    */
+    // We keep the loop structure commented out or just remove it.
+    // Removing entirely for cleanliness as requested "sil" (delete).
+
+  }
+
+  createGameGrid() {
+    // Game area layout - Main interaction zone
+    // Position below RefKey. RefKey is at 150 (stays there).
+    // Moving layout elements up by 50 pixels
+
+    const layoutY = 400;
+    // Layout image removed per user request
+    // const layout = this.scene.add.image(512, layoutY, 'layout');
+
+    // Text removed per user request
+    // "Aşağıdaki sembolü doğru sayıyla eşleştir" text removed
+
+    // Create grid of symbols to match
+    this.createCurrentSymbol(layoutY);
+  }
+
+  createCurrentSymbol(yPos) {
+    // Clear previous symbols
+    this.gameSymbols.forEach(sprite => sprite.destroy());
+    this.gameSymbols = [];
+
+    // Get random symbol from the 7 available, but avoid same as last symbol
+    let symbolIndex;
+    let symbol;
+    do {
+      symbolIndex = Phaser.Math.Between(0, 6);
+      symbol = this.symbols[symbolIndex];
+    } while (symbol === this.lastSymbol && this.symbols.length > 1);
+
+    this.lastSymbol = symbol;
+
+    // Create large symbol in center of the layout
+    // Position should be passed or calculated
+    const finalY = yPos || 500;
+
+    const symbolImg = this.scene.add.image(512, finalY, symbol);
+    symbolImg.setScale(1.2);
+    symbolImg.setDepth(2);
+
+    this.gameSymbols.push(symbolImg);
+    this.currentSymbol = symbol;
+  }
+
+  checkAnswer(inputDigit) {
+    const correctDigit = this.symbolToDigit[this.currentSymbol];
+    // inputDigit comes from key press (1-7)
+
+    const isCorrect = (inputDigit === correctDigit);
+
+    return {
+      correct: isCorrect,
+      expectedDigit: correctDigit,
+      inputDigit: inputDigit
+    };
+  }
+
+  nextSymbol() {
+    // Small delay before showing next symbol
+    this.scene.time.delayedCall(200, () => {
+      this.createCurrentSymbol(400); // Maintain consistent Y pos (layoutY)
+    });
+  }
+}

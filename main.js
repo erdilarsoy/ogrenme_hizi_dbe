@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import GameScene from './gameScene.js';
 import MenuScene from './menuScene.js';
 import TutorialScene from './tutorialScene.js';
+import InfoScene from './infoScene.js';
 import { downloadCSVResults } from './downloadHelper.js';
 
 const config = {
@@ -23,7 +24,7 @@ const config = {
       debug: false
     }
   },
-  scene: [MenuScene, TutorialScene, GameScene]
+  scene: [MenuScene, InfoScene, TutorialScene, GameScene]
 };
 
 const game = new Phaser.Game(config);
