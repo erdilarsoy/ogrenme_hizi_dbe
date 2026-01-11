@@ -35,7 +35,7 @@ export default class TutorialScene extends Phaser.Scene {
     // Overlays removed per user request (Reference Key image contains instructions now)
 
     // Practice area - moved up by 50 pixels to match GameScene
-    const layoutY = 400;
+    const layoutY = 320;
     // Layout image removed per user request
     // const layout = this.add.image(512, layoutY, 'layout').setScale(1.0);
 
@@ -80,7 +80,7 @@ export default class TutorialScene extends Phaser.Scene {
       const idx = Phaser.Math.Between(0, 6);
       symbol = this.symbols[idx];
     } while (symbol === this.lastSymbol && this.symbols.length > 1);
-    
+
     this.lastSymbol = symbol;
     this.currentSymbol = symbol;
     this.currentSymbolImage.setTexture(this.currentSymbol);
@@ -97,8 +97,8 @@ export default class TutorialScene extends Phaser.Scene {
         // Tutorial complete - pass tutorial completion time to GameScene
         const tutorialEndTime = Date.now();
         this.time.delayedCall(300, () => {
-          this.scene.start('GameScene', { 
-            playerName: this.playerInfo.name, 
+          this.scene.start('GameScene', {
+            playerName: this.playerInfo.name,
             companyName: this.playerInfo.company,
             tutorialEndTime: tutorialEndTime
           });
@@ -110,7 +110,7 @@ export default class TutorialScene extends Phaser.Scene {
   }
 
   createDigitButtons() {
-    const buttonY = 550; // Moved up by 50 pixels to match GameScene
+    const buttonY = 470; // Moved up to match GameScene
     const buttonSpacing = 120; // Spread evenly (was 60)
     const digits = [1, 2, 3, 4, 5, 6, 7];
     const totalWidth = (digits.length - 1) * buttonSpacing;

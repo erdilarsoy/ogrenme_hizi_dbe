@@ -26,7 +26,7 @@ export default class InputHandler {
   }
 
   createDigitButtons() {
-    const buttonY = 550; // Moved up by 50 pixels
+    const buttonY = 470; // Moved up by 80 pixels (was 550)
     const buttonSpacing = 120; // Spread evenly (was 60)
 
     // Create buttons for digits 1-7

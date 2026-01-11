@@ -42,7 +42,7 @@ export default class InfoScene extends Phaser.Scene {
 
     // Start button - moved down
     const buttonX = panelX;
-    const buttonY = panelY + 130;
+    const buttonY = panelY + 150;
     const buttonWidth = 200;
     const buttonHeight = 60;
 
@@ -61,7 +61,7 @@ export default class InfoScene extends Phaser.Scene {
 
     // Make button interactive
     const buttonHitArea = new Phaser.Geom.Rectangle(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2, buttonWidth, buttonHeight);
-    
+
     this.input.on('pointerdown', (pointer) => {
       if (Phaser.Geom.Rectangle.Contains(buttonHitArea, pointer.x, pointer.y)) {
         // Start game directly (skip tutorial)

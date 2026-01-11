@@ -43,7 +43,7 @@ export default class SymbolManager {
     // Position below RefKey. RefKey is at 150 (stays there).
     // Moving layout elements up by 50 pixels
 
-    const layoutY = 400;
+    const layoutY = 320;
     // Layout image removed per user request
     // const layout = this.scene.add.image(512, layoutY, 'layout');
 
@@ -97,7 +97,7 @@ export default class SymbolManager {
   nextSymbol() {
     // Small delay before showing next symbol
     this.scene.time.delayedCall(200, () => {
-      this.createCurrentSymbol(400); // Maintain consistent Y pos (layoutY)
+      this.createCurrentSymbol(320); // Maintain consistent Y pos (layoutY)
     });
   }
 }

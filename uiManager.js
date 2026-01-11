@@ -6,50 +6,52 @@ export default class UIManager {
     this.scoreText = null;
     this.accuracyText = null;
     this.streakText = null;
+    this.uiFrame = null;
   }
 
   createUI() {
-    // Progress bar area - shows time countdown (60 seconds to 0)
-    // Stats (Skor, Doğruluk Oranı, Seri) displayed above the progress bar
-    // Moved up by 50 pixels
-    const barX = 80;
-    const barY = 630;
-    const barWidth = 864;
-    const barHeight = 20;
+    // Moved up for better layout
+    const frameX = 50;
+    const frameY = 560;
+    const frameWidth = 924;
+    const frameHeight = 110;
 
-    // Progress bar graphics container (for time countdown)
-    this.progressBar = this.scene.add.graphics();
-    this.progressBar.setDepth(2);
+    // Create a gray frame (background) for all stats and progress bar
+    this.uiFrame = this.scene.add.graphics();
+    this.uiFrame.setDepth(1);
+    this.uiFrame.fillStyle(0x333333, 0.8);
+    this.uiFrame.fillRoundedRect(frameX, frameY, frameWidth, frameHeight, 15);
+    this.uiFrame.lineStyle(3, 0x666666, 1);
+    this.uiFrame.strokeRoundedRect(frameX, frameY, frameWidth, frameHeight, 15);
 
-    // Background for the progress bar
-    this.progressBarBg = this.scene.add.graphics();
-    this.progressBarBg.setDepth(1);
-    
-    // Stats displayed above the progress bar
-    const statsY = 600;
-    
+    // Stats displayed inside the frame
+    const statsY = frameY + 35;
+
     // Skor (Left)
-    this.scoreText = this.scene.add.text(250, statsY, 'Skor: 0', {
-      fontSize: '20px',
+    this.scoreText = this.scene.add.text(230, statsY, 'Skor: 0', {
+      fontSize: '22px',
       fill: '#ffffff',
+      fontFamily: 'Arimo',
       fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(2);
 
     // Doğruluk Oranı (Center)
-    this.accuracyText = this.scene.add.text(512, statsY, 'Doğruluk: %100', {
-      fontSize: '20px',
+    this.accuracyText = this.scene.add.text(490, statsY, 'Doğruluk Oranı: %100', {
+      fontSize: '22px',
       fill: '#ffffff',
+      fontFamily: 'Arimo',
       fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(2);
 
     // Seri (Right)
-    this.streakText = this.scene.add.text(774, statsY, 'Seri: 0', {
-      fontSize: '20px',
+    this.streakText = this.scene.add.text(794, statsY, 'Seri: 0', {
+      fontSize: '22px',
       fill: '#ffffff',
+      fontFamily: 'Arimo',
       fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(2);
 
-    // Initialize progress bar (shows time)
+    // Progress bar area inside the frame
     this.updateProgressBar();
   }
 
@@ -70,7 +72,7 @@ export default class UIManager {
     if (data.total > 0) {
       accuracy = Math.round((data.correct / data.total) * 100);
     }
-    if (this.accuracyText) this.accuracyText.setText(`Doğruluk: %${accuracy}`);
+    if (this.accuracyText) this.accuracyText.setText(`Doğruluk Oranı: %${accuracy}`);
 
     // Update Streak
     if (this.streakText) this.streakText.setText(`Seri: ${data.streak}`);
@@ -85,10 +87,20 @@ export default class UIManager {
   updateProgressBar() {
     const data = this.scene.gameData;
     const barX = 80;
-    const barY = 630; // Moved up by 50 pixels
+    const barY = 630; // Centered vertically in the lower half of the frame (560 + 70ish)
     const barWidth = 864;
     const barHeight = 20;
     const maxTime = 60; // 1 dakika = 60 saniye
+
+    // Ensure graphics objects exist
+    if (!this.progressBar) {
+      this.progressBar = this.scene.add.graphics();
+      this.progressBar.setDepth(3);
+    }
+    if (!this.progressBarBg) {
+      this.progressBarBg = this.scene.add.graphics();
+      this.progressBarBg.setDepth(2);
+    }
 
     // Clear previous drawing
     this.progressBar.clear();
@@ -112,7 +124,7 @@ export default class UIManager {
       const elapsed = maxTime - data.timeRemaining;
       progress = Math.max(0, Math.min(1, elapsed / maxTime));
     }
-    
+
     // Width increases from 0 to barWidth as time passes (soldan sağa dolsun)
     const width = barWidth * progress;
 
